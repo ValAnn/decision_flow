@@ -1,98 +1,164 @@
 <template>
-  <div class="h-[calc(100vh-140px)] flex flex-col">
-    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+  <div class="space-y-6">
+    <div class="flex justify-between items-center">
       <div>
-        <div class="flex items-center gap-3">
-          <h1 class="text-3xl font-bold text-brand-dark">Канбан-доска проекта</h1>
-          <span
-            class="bg-brand-green/10 text-brand-green text-[10px] font-bold px-2 py-0.5 rounded-full uppercase"
-            >Активен</span
-          >
-        </div>
-        <p class="text-sm text-brand-gray mt-1">
-          Управляйте задачами и отслеживайте прогресс команды в реальном времени.
-        </p>
+        <h1 class="text-2xl font-bold text-brand-dark">Мои задачи</h1>
+        <p class="text-sm text-brand-gray">Управление вашим рабочим процессом</p>
       </div>
-
-      <div class="flex items-center gap-3">
-        <div class="flex -space-x-2 mr-4">
-          <img
-            v-for="i in 3"
-            :key="i"
-            :src="`https://i.pravatar.cc/150?u=${i}`"
-            class="w-8 h-8 rounded-full border-2 border-white shadow-sm"
-          />
-          <div
-            class="w-8 h-8 rounded-full bg-brand-light border-2 border-white flex items-center justify-center text-[10px] font-bold text-brand-gray"
-          >
-            +12
-          </div>
-        </div>
-        <VButton variant="secondary" size="md" class="gap-2">
-          <SlidersHorizontal class="w-4 h-4" /> Фильтры
-        </VButton>
-        <VButton variant="primary" size="md" class="gap-2" @click="$router.push('/create-task')">
-          <Plus class="w-4 h-4" /> Новая задача
-        </VButton>
-      </div>
+      <button @click="fetchTasks" class="p-2 hover:bg-brand-light rounded-full transition-colors">
+        <Clock class="w-5 h-5 text-brand-gray" :class="{ 'animate-spin': isLoading }" />
+      </button>
     </div>
 
-    <div class="flex-1 flex gap-6 overflow-x-auto pb-6 custom-scrollbar items-start">
-      <TaskColumn title="К выполнению" :tasks="tasksByStatus.todo" />
-      <TaskColumn title="В работе" :tasks="tasksByStatus.inProgress" />
-      <TaskColumn title="На проверке" :tasks="tasksByStatus.inReview" />
-      <TaskColumn title="Готово" :tasks="tasksByStatus.done" />
+    <div v-if="isLoading" class="flex justify-center py-20">
+      <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-green"></div>
+    </div>
+
+    <div v-else class="grid grid-cols-1 lg:grid-cols-3 gap-6 overflow-x-auto pb-4">
+      <div v-for="column in columns" :key="column.id" class="flex flex-col min-w-[300px]">
+        <div class="flex items-center justify-between mb-4 px-2">
+          <div class="flex items-center gap-2">
+            <h3 class="font-bold text-brand-dark uppercase text-xs tracking-wider">
+              {{ column.title }}
+            </h3>
+            <span
+              class="bg-brand-light text-brand-gray text-[10px] px-2 py-0.5 rounded-full font-bold"
+            >
+              {{ column.items.length }}
+            </span>
+          </div>
+        </div>
+
+        <div
+          class="space-y-4 min-h-[500px] bg-gray-50/50 p-2 rounded-2xl border border-dashed border-gray-200"
+        >
+          <div
+            v-for="task in column.items"
+            :key="task.id"
+            class="bg-white p-4 rounded-xl border border-brand-border shadow-sm hover:shadow-md transition-all group cursor-grab active:cursor-grabbing"
+          >
+            <div class="flex justify-between items-start mb-3">
+              <span
+                :class="[
+                  'text-[10px] font-bold px-2 py-0.5 rounded border uppercase',
+                  getPriorityClass(task.priority),
+                ]"
+              >
+                {{ task.priority }}
+              </span>
+              <span class="text-[10px] text-gray-400 font-mono">#{{ task.id }}</span>
+            </div>
+
+            <h4
+              class="font-bold text-brand-dark text-sm mb-1 group-hover:text-brand-green transition-colors"
+            >
+              {{ task.title }}
+            </h4>
+            <p class="text-xs text-brand-gray line-clamp-2 mb-4">
+              {{ task.description }}
+            </p>
+
+            <div class="flex items-center justify-between pt-4 border-t border-brand-light">
+              <div class="flex flex-col gap-1">
+                <div class="flex items-center gap-1.5">
+                  <User class="w-3 h-3 text-brand-gray" />
+                  <span class="text-[10px] font-medium text-brand-dark">
+                    От: {{ task.creator?.fullName.split(' ')[0] }}
+                  </span>
+                </div>
+                <div class="flex items-center gap-1.5">
+                  <Clock class="w-3 h-3 text-brand-gray" />
+                  <span class="text-[10px] text-brand-gray uppercase font-bold">
+                    {{ formatDate(task.createdAt) }}
+                  </span>
+                </div>
+              </div>
+
+              <div v-if="task.status === 'DONE'" class="text-brand-green">
+                <CheckCircle2 class="w-5 h-5" />
+              </div>
+              <div v-else class="relative">
+                <div
+                  class="w-6 h-6 rounded-full bg-brand-light flex items-center justify-center border border-white text-[8px] font-bold text-brand-gray"
+                >
+                  {{ task.lead?.fullName.charAt(0) }}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <button
+            v-if="column.id === 'TODO'"
+            class="w-full py-3 border-2 border-dashed border-gray-200 rounded-xl text-gray-400 text-xs font-bold hover:border-brand-green hover:text-brand-green transition-all"
+          >
+            + Добавить задачу
+          </button>
+        </div>
+      </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { computed } from 'vue'
-import { Plus, SlidersHorizontal } from 'lucide-vue-next'
-import VButton from '../components/base/VButton.vue'
-import TaskColumn from '../components/tasks/TaskColumn.vue'
+import { ref, onMounted, computed } from 'vue'
+import apiClient from '../api/axios'
+import { Clock, CheckCircle2, Circle, AlertCircle, MoreVertical, User } from 'lucide-vue-next'
 
-// Моковые данные (имитация API)
-const tasks = [
-  {
-    id: 101,
-    title: 'Разработать флоу авторизации через OAuth2',
-    status: 'todo',
-    priority: 'High',
-    date: '24 Окт, 2023',
-    assignee: { name: 'Алекс', avatar: 'https://i.pravatar.cc/150?u=1' },
-  },
-  {
-    id: 112,
-    title: 'Рефакторинг стейт-менеджмента Redux Toolkit',
-    status: 'inProgress',
-    priority: 'High',
-    progress: 65,
-    date: '25 Окт, 2023',
-    assignee: { name: 'Марк', avatar: 'https://i.pravatar.cc/150?u=2' },
-  },
-  {
-    id: 124,
-    title: 'Обновить политику конфиденциальности для GDPR',
-    status: 'inReview',
-    priority: 'Low',
-    date: '26 Окт, 2023',
-    assignee: { name: 'Елена', avatar: 'https://i.pravatar.cc/150?u=3' },
-  },
-  {
-    id: 105,
-    title: 'Обновление иконок системного набора',
-    status: 'todo',
-    priority: 'Medium',
-    date: '27 Окт, 2023',
-    assignee: { name: 'Сара', avatar: 'https://i.pravatar.cc/150?u=4' },
-  },
-]
+const tasks = ref([])
+const isLoading = ref(true)
+const error = ref(null)
 
-const tasksByStatus = computed(() => ({
-  todo: tasks.filter((t) => t.status === 'todo'),
-  inProgress: tasks.filter((t) => t.status === 'inProgress'),
-  inReview: tasks.filter((t) => t.status === 'inReview'),
-  done: tasks.filter((t) => t.status === 'done'),
-}))
+// Загрузка задач
+const fetchTasks = async () => {
+  isLoading.value = true
+  try {
+    const response = await apiClient.get('/tasks/my')
+    tasks.value = response.data
+  } catch (err) {
+    error.value = 'Не удалось загрузить ваши задачи'
+    console.error(err)
+  } finally {
+    isLoading.value = false
+  }
+}
+
+onMounted(fetchTasks)
+
+// Группировка задач по статусам для Канбан-доски
+const columns = computed(() => [
+  {
+    id: 'TODO',
+    title: 'К исполнению',
+    items: tasks.value.filter((t) => t.status === 'TODO' || !t.status),
+  },
+  {
+    id: 'IN_PROGRESS',
+    title: 'В работе',
+    items: tasks.value.filter((t) => t.status === 'IN_PROGRESS'),
+  },
+  {
+    id: 'DONE',
+    title: 'Завершено',
+    items: tasks.value.filter((t) => t.status === 'DONE'),
+  },
+])
+
+// Вспомогательные функции для стилизации
+const getPriorityClass = (priority) => {
+  switch (priority) {
+    case 'HIGH':
+      return 'bg-red-50 text-red-600 border-red-100'
+    case 'MEDIUM':
+      return 'bg-amber-50 text-amber-600 border-amber-100'
+    case 'LOW':
+      return 'bg-blue-50 text-blue-600 border-blue-100'
+    default:
+      return 'bg-gray-50 text-gray-600'
+  }
+}
+
+const formatDate = (dateStr) => {
+  if (!dateStr) return '—'
+  return new Date(dateStr).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' })
+}
 </script>

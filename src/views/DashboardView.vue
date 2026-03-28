@@ -1,8 +1,19 @@
 <template>
   <div class="space-y-8">
-    <div>
-      <h1 class="text-3xl font-bold text-brand-dark">Добро пожаловать, Алекс!</h1>
-      <p class="text-brand-gray mt-2">Вот что происходит в ваших проектах сегодня.</p>
+    <div class="flex justify-between">
+      <div>
+        <h1 class="text-3xl font-bold text-brand-dark">
+          Добро пожаловать, <b>{{ auth.user || 'Пользователь' }}</b>
+        </h1>
+
+        <p class="text-brand-gray mt-2">Вот что происходит в ваших проектах сегодня.</p>
+      </div>
+      <button
+        @click="handleLogout"
+        class="px-4 py-2 bg-red-500 text-red rounded hover:bg-red-600 transition"
+      >
+        Выйти
+      </button>
     </div>
 
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -88,4 +99,15 @@ import { CheckCircle2, Clock, BarChart3, AlertCircle } from 'lucide-vue-next'
 
 import StatsCard from '../components/dashboard/StatsCard.vue'
 import WorkloadChart from '../components/dashboard/WorkloadChart.vue'
+
+import { useAuthStore } from '@/stores/auth'
+import { useRouter } from 'vue-router'
+
+const auth = useAuthStore()
+const router = useRouter()
+
+const handleLogout = () => {
+  auth.logout() // Очистит стор и localStorage
+  router.push('/login')
+}
 </script>
