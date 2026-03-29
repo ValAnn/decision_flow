@@ -10,7 +10,7 @@ import { useAuthStore } from '@/stores/auth'
 const routes = [
   { path: '/', name: 'dashboard', component: DashboardView },
   { path: '/dashboard', redirect: '/' },
-  { path: '/create-task', name: 'create-task', component: CreateTaskView },
+  { path: '/tasks/create', name: 'tasks/create', component: CreateTaskView },
   { path: '/tasks', name: 'tasks', component: TasksView },
   { path: '/team', name: 'team', component: () => import('../views/TeamView.vue') },
   { path: '/team/:id', name: 'user-detail', component: UserDetailView },

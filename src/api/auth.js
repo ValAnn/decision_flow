@@ -5,9 +5,10 @@ export const authService = {
   async login(credentials) {
     // credentials = { username: '...', password: '...' }
     const response = await apiClient.post('/auth/login', credentials)
+    console.log(response)
     if (response.data.token) {
       localStorage.setItem('user-token', response.data.token)
-      localStorage.setItem('user-data', JSON.stringify(response.data.user))
+      localStorage.setItem('user-data', response.data.id)
     }
     return response.data
   },

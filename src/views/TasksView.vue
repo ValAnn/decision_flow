@@ -87,12 +87,14 @@
             </div>
           </div>
 
-          <button
-            v-if="column.id === 'TODO'"
-            class="w-full py-3 border-2 border-dashed border-gray-200 rounded-xl text-gray-400 text-xs font-bold hover:border-brand-green hover:text-brand-green transition-all"
-          >
-            + Добавить задачу
-          </button>
+          <router-link to="/tasks/create">
+            <button
+              v-if="column.id === 'TODO'"
+              class="w-full py-3 border-2 border-dashed border-gray-200 rounded-xl text-gray-400 text-xs font-bold hover:border-brand-green hover:text-brand-green transition-all"
+            >
+              + Добавить задачу
+            </button>
+          </router-link>
         </div>
       </div>
     </div>
