@@ -11,7 +11,7 @@
       <span class="text-xl font-extrabold tracking-tight">DecisionFlow</span>
     </div>
 
-    <nav class="flex-1 flex flex-col gap-3">
+    <nav v-if="authStore.isAuthenticated" class="flex-1 flex flex-col gap-3">
       <router-link
         v-for="item in mainNavigation"
         :key="item.id"
@@ -30,7 +30,7 @@
           <component
             :is="item.icon"
             :class="[
-              'w-5 h-5 transition-colors',
+              'w-5 h-5',
               isActive ? 'text-brand-green' : 'text-gray-400 group-hover:text-white',
             ]"
             :stroke-width="2"
@@ -40,15 +40,10 @@
       </router-link>
     </nav>
 
-    <div class="pt-6 border-t border-white/5 space-y-6">
+    <div v-if="authStore.isAuthenticated" class="pt-6 border-t border-white/5 space-y-6">
       <div class="space-y-1">
-        <a
-          v-for="item in secondaryNavigation"
-          :key="item.id"
-          href="#"
-          class="flex items-center gap-3 px-4 py-2 text-gray-400 hover:text-white text-sm transition-colors group"
-        >
-          <component :is="item.icon" class="w-4 h-4" :stroke-width="2" />
+        <a v-for="item in secondaryNavigation" :key="item.id" href="#" class="...">
+          <component :is="item.icon" class="w-4 h-4" />
           <span>{{ item.name }}</span>
         </a>
       </div>
@@ -57,37 +52,51 @@
         class="flex items-center gap-3 p-3 bg-white/5 rounded-xl border border-white/5 hover:bg-white/10 transition-colors cursor-pointer"
       >
         <div class="relative">
-          <img
-            :src="user.avatar"
-            class="w-10 h-10 rounded-full object-cover border border-white/10"
-            alt="User avatar"
-          />
+          <img :src="DEFAULT_AVATAR" class="w-10 h-10 rounded-full object-cover" />
           <div
             class="absolute bottom-0 right-0 w-3 h-3 bg-brand-green border-2 border-brand-dark rounded-full"
           ></div>
         </div>
         <div class="flex-1 min-w-0">
-          <p class="text-sm font-semibold truncate">{{ user.name }}</p>
-          <p class="text-[10px] text-gray-500 font-medium truncate uppercase tracking-tighter">
-            {{ user.role }}
+          <p class="text-sm font-semibold truncate">{{ authStore.user?.name || 'Пользователь' }}</p>
+          <p class="text-[10px] text-gray-500 font-medium truncate uppercase">
+            {{ authStore.user?.role }}
           </p>
         </div>
       </div>
+
+      <button
+        @click="handleLogout"
+        class="w-full text-xs text-red-400 hover:text-red-300 text-left px-4"
+      >
+        Выйти из системы
+      </button>
+    </div>
+
+    <div v-else class="flex-1 flex items-center justify-center">
+      <router-link
+        to="/login"
+        class="text-brand-green border border-brand-green px-6 py-2 rounded-lg hover:bg-brand-green/10 transition-all"
+      >
+        Войти
+      </router-link>
     </div>
   </aside>
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { useRouter } from 'vue-router'
 import { Zap } from 'lucide-vue-next'
 import { mainNavigation, secondaryNavigation } from '../../mocks/navigation'
+import { useAuthStore } from '@/stores/auth' // Импортируем наш стор
 
-// Данные пользователя (обычно приходят из стора/бэкенда)
-const user = {
-  name: 'Алекс Ривера',
-  role: 'Admin Console',
-  avatar: 'https://i.pravatar.cc/150?u=alex',
+const DEFAULT_AVATAR = 'https://www.gravatar.com/avatar/00000000000000000000000000000000?d=mp&f=y'
+
+const authStore = useAuthStore()
+const router = useRouter()
+
+const handleLogout = () => {
+  authStore.logout()
+  router.push('/login')
 }
-
-const activeTab = ref('overview')
 </script>
