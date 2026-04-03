@@ -29,73 +29,80 @@
           </div>
         </div>
 
-        <div
+        <draggable
+          :list="column.items"
+          group="tasks"
+          item-key="id"
+          @change="(evt) => onDragEnd(evt, column.id)"
           class="space-y-4 min-h-[500px] bg-gray-50/50 p-2 rounded-2xl border border-dashed border-gray-200"
         >
-          <div
-            v-for="task in column.items"
-            :key="task.id"
-            class="bg-white p-4 rounded-xl border border-brand-border shadow-sm hover:shadow-md transition-all group cursor-grab active:cursor-grabbing"
-          >
-            <div class="flex justify-between items-start mb-3">
-              <span
-                :class="[
-                  'text-[10px] font-bold px-2 py-0.5 rounded border uppercase',
-                  getPriorityClass(task.priority),
-                ]"
-              >
-                {{ task.priority }}
-              </span>
-              <span class="text-[10px] text-gray-400 font-mono">#{{ task.id }}</span>
-            </div>
-
-            <h4
-              class="font-bold text-brand-dark text-sm mb-1 group-hover:text-brand-green transition-colors"
+          <template #item="{ element: task }">
+            <div
+              class="bg-white p-4 rounded-xl border border-brand-border shadow-sm hover:shadow-md transition-all group cursor-grab active:cursor-grabbing"
             >
-              {{ task.title }}
-            </h4>
-            <p class="text-xs text-brand-gray line-clamp-2 mb-4">
-              {{ task.description }}
-            </p>
-
-            <div class="flex items-center justify-between pt-4 border-t border-brand-light">
-              <div class="flex flex-col gap-1">
-                <div class="flex items-center gap-1.5">
-                  <User class="w-3 h-3 text-brand-gray" />
-                  <span class="text-[10px] font-medium text-brand-dark">
-                    От: {{ task.creator?.fullName.split(' ')[0] }}
-                  </span>
-                </div>
-                <div class="flex items-center gap-1.5">
-                  <Clock class="w-3 h-3 text-brand-gray" />
-                  <span class="text-[10px] text-brand-gray uppercase font-bold">
-                    {{ formatDate(task.createdAt) }}
-                  </span>
-                </div>
-              </div>
-
-              <div v-if="task.status === 'DONE'" class="text-brand-green">
-                <CheckCircle2 class="w-5 h-5" />
-              </div>
-              <div v-else class="relative">
-                <div
-                  class="w-6 h-6 rounded-full bg-brand-light flex items-center justify-center border border-white text-[8px] font-bold text-brand-gray"
+              <div class="flex justify-between items-start mb-3">
+                <span
+                  :class="[
+                    'text-[10px] font-bold px-2 py-0.5 rounded border uppercase',
+                    getPriorityClass(task.priority),
+                  ]"
                 >
-                  {{ task.lead?.fullName.charAt(0) }}
+                  {{ task.priority }}
+                </span>
+                <span class="text-[10px] text-gray-400 font-mono">#{{ task.id }}</span>
+              </div>
+
+              <router-link
+                v-for="task in column.items"
+                :key="task.id"
+                :to="`/tasks/${task.id}`"
+                class="block font-bold text-brand-dark text-sm group-hover:text-brand-green transition-colors mb-3"
+              >
+                {{ task.title }}
+              </router-link>
+              <p class="text-xs text-brand-gray line-clamp-2 mb-4">
+                {{ task.description }}
+              </p>
+
+              <div class="flex items-center justify-between pt-4 border-t border-brand-light">
+                <div class="flex flex-col gap-1">
+                  <div class="flex items-center gap-1.5">
+                    <User class="w-3 h-3 text-brand-gray" />
+                    <span class="text-[10px] font-medium text-brand-dark">
+                      От: {{ task.creator?.fullName?.split(' ')[0] || 'Система' }}
+                    </span>
+                  </div>
+                  <div class="flex items-center gap-1.5">
+                    <Clock class="w-3 h-3 text-brand-gray" />
+                    <span class="text-[10px] text-brand-gray uppercase font-bold">
+                      {{ formatDate(task.createdAt) }}
+                    </span>
+                  </div>
+                </div>
+
+                <div v-if="task.status === 'DONE'" class="text-brand-green">
+                  <CheckCircle2 class="w-5 h-5" />
+                </div>
+                <div v-else class="relative">
+                  <div
+                    class="w-6 h-6 rounded-full bg-brand-light flex items-center justify-center border border-white text-[8px] font-bold text-brand-gray"
+                  >
+                    {{ task.lead?.fullName?.charAt(0) || '?' }}
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
+          </template>
+        </draggable>
 
-          <router-link to="/tasks/create">
-            <button
-              v-if="column.id === 'TODO'"
-              class="w-full py-3 border-2 border-dashed border-gray-200 rounded-xl text-gray-400 text-xs font-bold hover:border-brand-green hover:text-brand-green transition-all"
-            >
-              + Добавить задачу
-            </button>
-          </router-link>
-        </div>
+        <router-link to="/tasks/create" class="mt-4">
+          <button
+            v-if="column.id === 'TODO'"
+            class="w-full py-3 border-2 border-dashed border-gray-200 rounded-xl text-gray-400 text-xs font-bold hover:border-brand-green hover:text-brand-green transition-all"
+          >
+            + Добавить задачу
+          </button>
+        </router-link>
       </div>
     </div>
   </div>
@@ -105,6 +112,36 @@
 import { ref, onMounted, computed } from 'vue'
 import apiClient from '../api/axios'
 import { Clock, CheckCircle2, Circle, AlertCircle, MoreVertical, User } from 'lucide-vue-next'
+
+import draggable from 'vuedraggable'
+
+// Функция для обновления статуса задачи на бэкенде
+const updateTaskStatus = async (taskId, newStatus) => {
+  try {
+    // 1. Отправляем запрос на бэкенд
+    await apiClient.patch(`/tasks/${taskId}/status`, { status: newStatus })
+
+    console.log(`Статус успешно обновлен на ${newStatus}`)
+
+    // 2. Обновляем список задач, чтобы данные (например, дата обновления или порядок)
+    // синхронизировались с базой
+    await fetchTasks()
+  } catch (err) {
+    console.error('Ошибка при обновлении статуса:', err)
+    // Если произошла ошибка, возвращаем задачи в исходное состояние
+    await fetchTasks()
+    alert('Не удалось изменить статус. Возможно, у вас недостаточно прав.')
+  }
+}
+
+// Обработчик события перетаскивания
+const onDragEnd = (event, columnId) => {
+  // event.added содержит информацию о задаче, которая упала в новую колонку
+  if (event.added) {
+    const task = event.added.element
+    updateTaskStatus(task.id, columnId)
+  }
+}
 
 const tasks = ref([])
 const isLoading = ref(true)
