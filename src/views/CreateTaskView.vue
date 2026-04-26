@@ -175,7 +175,7 @@
               @click="taskForm.developer.id = expert.id"
               :class="[
                 'p-4 rounded-xl border transition-all cursor-pointer group',
-                taskForm.assignee.id === expert.id
+                taskForm.developer.id === expert.id
                   ? 'border-brand-green bg-brand-green/5 shadow-sm'
                   : 'border-transparent bg-brand-light hover:bg-white hover:border-brand-border',
               ]"
@@ -187,7 +187,7 @@
                 />
                 <div class="flex-1 min-w-0">
                   <div class="flex justify-between items-start">
-                    <p class="text-sm font-bold text-brand-dark truncate">{{ expert.fullName }}</p>
+                    <p class="text-sm font-bold text-brand-dark truncate">{{ expert.name }}</p>
                     <span
                       class="text-[9px] font-extrabold text-brand-green bg-white px-1.5 py-0.5 rounded border border-brand-green/20"
                     >
@@ -196,7 +196,7 @@
                   </div>
                   <p class="text-[10px] text-brand-gray font-medium">{{ expert.roleName }}</p>
                 </div>
-                <Check v-if="taskForm.assignee.id === expert.id" class="w-4 h-4 text-brand-green" />
+                <Check v-if="taskForm.developer.id === expert.id" class="w-4 h-4 text-brand-green" />
               </div>
             </div>
           </div>
@@ -263,8 +263,8 @@ const taskForm = reactive({
   deadlineAt: null,
   creator: { id: 1 },
   assignee: { id: currentUser || 1 },
-  developer: null,
-  lead: { id: 2 }, // Заглушка лида по умолчанию
+  developer: { id: 1 },
+  lead: { id: 2 }, 
   spentHours: 0,
 })
 
@@ -272,12 +272,12 @@ const taskForm = reactive({
 const fetchExperts = async () => {
   isLoadingExperts.value = true
   try {
-    const response = await apiClient.get('/users') // Путь к твоему списку пользователей
+    const response = await apiClient.get('/developers/profile') 
     suggestedExperts.value = response.data.map((user) => ({
       id: user.id,
-      fullName: user.fullName,
+      name: user.name,
       roleName: user.role?.name || 'Developer',
-      match: Math.floor(Math.random() * 20) + 75, // Имитация совпадения
+      match: Math.floor(Math.random() * 20) + 75, 
       avatar: `https://i.pravatar.cc/150?u=${user.id}`,
     }))
   } catch (err) {

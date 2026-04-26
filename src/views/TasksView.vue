@@ -53,8 +53,6 @@
               </div>
 
               <router-link
-                v-for="task in column.items"
-                :key="task.id"
                 :to="`/tasks/${task.id}`"
                 class="block font-bold text-brand-dark text-sm group-hover:text-brand-green transition-colors mb-3"
               >
