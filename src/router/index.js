@@ -6,6 +6,7 @@ import UserDetailView from '../views/UserDetailView.vue'
 import LoginView from '../views/LoginView.vue'
 import RegisterView from '../views/RegisterView.vue'
 import TaskDetailView from '../views/TaskDetailView.vue'
+import DepartamentsTeam from '../views/DepartamentsTeam.vue'
 import { useAuthStore } from '@/stores/auth'
 
 const routes = [
@@ -16,6 +17,7 @@ const routes = [
   { path: '/team', name: 'team', component: () => import('../views/TeamView.vue') },
   { path: '/team/:id', name: 'user-detail', component: UserDetailView },
   { path: '/tasks/:id', name: 'task-detail', component: TaskDetailView, props: true },
+  { path: '/departament_team', name: 'departament-team', component: DepartamentsTeam },
 
   { path: '/login', component: LoginView, meta: { guest: true } },
   { path: '/register', component: RegisterView, meta: { guest: true } },
