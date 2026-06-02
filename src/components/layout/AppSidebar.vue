@@ -41,15 +41,8 @@
     </nav>
 
     <div v-if="authStore.isAuthenticated" class="pt-6 border-t border-white/5 space-y-6">
-      <div class="space-y-1">
-        <a v-for="item in secondaryNavigation" :key="item.id" href="#" class="...">
-          <component :is="item.icon" class="w-4 h-4" />
-          <span>{{ item.name }}</span>
-        </a>
-      </div>
-
       <div
-        class="flex items-center gap-3 p-3 bg-white/5 rounded-xl border border-white/5 hover:bg-white/10 transition-colors cursor-pointer"
+        class="flex items-center gap-3 p-3 bg-white/5 rounded-xl border border-white/5 hover:bg-white/10 transition-colors"
       >
         <div class="relative">
           <img :src="DEFAULT_AVATAR" class="w-10 h-10 rounded-full object-cover" />
@@ -58,10 +51,7 @@
           ></div>
         </div>
         <div class="flex-1 min-w-0">
-          <p class="text-sm font-semibold truncate">{{ authStore.user?.name || 'Пользователь' }}</p>
-          <p class="text-[10px] text-gray-500 font-medium truncate uppercase">
-            {{ authStore.user?.role }}
-          </p>
+          <p class="text-sm font-semibold truncate">{{ authStore.username }}</p>
         </div>
       </div>
 
@@ -87,10 +77,11 @@
 <script setup>
 import { useRouter } from 'vue-router'
 import { Zap } from 'lucide-vue-next'
-import { mainNavigation, secondaryNavigation } from '../../mocks/navigation'
-import { useAuthStore } from '@/stores/auth' // Импортируем наш стор
+import { mainNavigation } from '../../mocks/navigation'
+import { useAuthStore } from '@/stores/auth'
 
-const DEFAULT_AVATAR = 'https://www.gravatar.com/avatar/00000000000000000000000000000000?d=mp&f=y'
+const DEFAULT_AVATAR =
+  'https://www.gravatar.com/avatar/00000000000000000000000000000000?d=mp&f=y'
 
 const authStore = useAuthStore()
 const router = useRouter()
@@ -100,3 +91,4 @@ const handleLogout = () => {
   router.push('/login')
 }
 </script>
+

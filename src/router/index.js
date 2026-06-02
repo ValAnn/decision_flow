@@ -10,14 +10,36 @@ import DepartamentsTeam from '../views/DepartamentsTeam.vue'
 import { useAuthStore } from '@/stores/auth'
 
 const routes = [
-  { path: '/', name: 'dashboard', component: DashboardView },
-  { path: '/dashboard', redirect: '/' },
-  { path: '/tasks/create', name: 'tasks/create', component: CreateTaskView },
-  { path: '/tasks', name: 'tasks', component: TasksView },
-  { path: '/team', name: 'team', component: () => import('../views/TeamView.vue') },
-  { path: '/team/:id', name: 'user-detail', component: UserDetailView },
-  { path: '/tasks/:id', name: 'task-detail', component: TaskDetailView, props: true },
-  { path: '/departament_team', name: 'departament-team', component: DepartamentsTeam },
+  { path: '/', redirect: '/login' },
+  { path: '/dashboard', name: 'dashboard', component: DashboardView, meta: { requiresAuth: true } },
+  { path: '/tasks/create', name: 'tasks/create', component: CreateTaskView, meta: { requiresAuth: true } },
+  { path: '/tasks', name: 'tasks', component: TasksView, meta: { requiresAuth: true } },
+  {
+    path: '/team',
+    name: 'team',
+    component: () => import('../views/TeamView.vue'),
+    meta: { requiresAuth: true },
+  },
+  { path: '/team/:id', name: 'user-detail', component: UserDetailView, meta: { requiresAuth: true } },
+  {
+    path: '/tasks/:id',
+    name: 'task-detail',
+    component: TaskDetailView,
+    props: true,
+    meta: { requiresAuth: true },
+  },
+  {
+    path: '/departament_team',
+    name: 'departament-team',
+    component: DepartamentsTeam,
+    meta: { requiresAuth: true },
+  },
+  {
+    path: '/tasks/edit/:id', // :id — это динамический параметр, который мы забираем через route.params.id
+    name: 'TaskEdit',
+    component: CreateTaskView, // Тот же самый файл формы!
+    meta: { requiresAuth: true },
+  },
 
   { path: '/login', component: LoginView, meta: { guest: true } },
   { path: '/register', component: RegisterView, meta: { guest: true } },

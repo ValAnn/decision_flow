@@ -1,32 +1,72 @@
 import { defineStore } from 'pinia'
 import api from '@/api/axios'
 
+const parseStoredUser = () => {
+  const raw = localStorage.getItem('user-data')
+  if (!raw) return null
+
+  try {
+    return JSON.parse(raw)
+  } catch {
+    return { id: raw, username: raw }
+  }
+}
+
+const pickFirst = (obj, keys, fallback = null) => {
+  for (const key of keys) {
+    const value = obj?.[key]
+    if (value !== undefined && value !== null && String(value).trim() !== '') {
+      return value
+    }
+  }
+  return fallback
+}
+
 export const useAuthStore = defineStore('auth', {
   state: () => ({
-    // Загружаем и токен, и данные пользователя при инициализации
     token: localStorage.getItem('token') || null,
-    user: localStorage.getItem('user-data') || null,
+    user: parseStoredUser(),
   }),
 
   getters: {
-    // Удобная проверка: вошел пользователь или нет
     isAuthenticated: (state) => !!state.token,
+    displayName: (state) => {
+      if (!state.user) return 'Пользователь'
+      if (typeof state.user === 'string') return state.user
+      return (
+        state.user.fullName ||
+        state.user.full_name ||
+        state.user.name ||
+        state.user.username ||
+        state.user.login ||
+        String(state.user.id || 'Пользователь')
+      )
+    },
+    username: (state) => {
+      if (!state.user) return 'Пользователь'
+      if (typeof state.user === 'string') return state.user
+      return state.user.username || state.user.login || state.user.name || String(state.user.id || 'Пользователь')
+    },
   },
 
   actions: {
     async login(credentials) {
       try {
         const response = await api.post('/auth/login', credentials)
+        const data = response.data || {}
 
-        // Обновляем состояние стора
-        this.token = response.data.token
-        this.user = response.data.id // Здесь сохраняется ID или объект пользователя
+        this.token = data.token
+        this.user = {
+          id: pickFirst(data, ['id', 'userId']),
+          username: pickFirst(data, ['username', 'login', 'userName'], credentials.username),
+          fullName: pickFirst(data, ['fullName', 'full_name', 'name']),
+          role: pickFirst(data, ['role']),
+        }
 
-        // Синхронизируем с localStorage
         localStorage.setItem('token', this.token)
-        localStorage.setItem('user-data', this.user)
+        localStorage.setItem('user-data', JSON.stringify(this.user))
 
-        return response.data
+        return data
       } catch (error) {
         console.error('Ошибка входа:', error)
         throw error
@@ -38,14 +78,11 @@ export const useAuthStore = defineStore('auth', {
     },
 
     logout() {
-      // Очищаем всё
       this.token = null
       this.user = null
       localStorage.removeItem('token')
-      localStorage.removeItem('user-data') // Не забываем удалить ID
-
-      // Если используешь vue-router, можно сделать редирект прямо здесь
-      // или в компоненте
+      localStorage.removeItem('user-data')
     },
   },
 })
+

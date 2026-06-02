@@ -10,6 +10,22 @@
       </button>
     </div>
 
+    <div class="flex items-center gap-3">
+      <!-- НОВАЯ КНОПКА: Импорт из Jira -->
+      <button
+        @click="syncJira"
+        :disabled="isSyncing"
+        class="flex items-center gap-2 px-4 py-2 bg-white border border-brand-border rounded-xl text-xs font-bold text-brand-dark hover:bg-brand-light transition-all shadow-sm disabled:opacity-50"
+      >
+        <RefreshCw v-if="isSyncing" class="w-3.5 h-3.5 animate-spin text-brand-green" />
+        {{ isSyncing ? 'Синхронизация...' : 'Импорт из Jira' }}
+      </button>
+
+      <button @click="fetchTasks" class="p-2 hover:bg-brand-light rounded-full transition-colors">
+        <Clock class="w-5 h-5 text-brand-gray" :class="{ 'animate-spin': isLoading }" />
+      </button>
+    </div>
+
     <div v-if="isLoading" class="flex justify-center py-20">
       <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-green"></div>
     </div>
@@ -113,6 +129,25 @@ import { Clock, CheckCircle2, Circle, AlertCircle, MoreVertical, User } from 'lu
 
 import draggable from 'vuedraggable'
 
+const isSyncing = ref(false) // Состояние загрузки специально для Jira
+
+// Метод синхронизации
+const syncJira = async () => {
+  isSyncing.value = true
+  console.log('import')
+  try {
+    // Используем apiClient (axios), который у вас уже настроен
+    await apiClient.post('/tasks/import')
+    alert('Задачи успешно импортированы из Jira!')
+    await fetchTasks() // Обновляем список на экране
+  } catch (err) {
+    console.error('Ошибка синхронизации с Jira:', err)
+    alert('Не удалось загрузить задачи. Проверьте настройки интеграции.')
+  } finally {
+    isSyncing.value = false
+  }
+}
+
 // Функция для обновления статуса задачи на бэкенде
 const updateTaskStatus = async (taskId, newStatus) => {
   try {
@@ -164,19 +199,19 @@ onMounted(fetchTasks)
 // Группировка задач по статусам для Канбан-доски
 const columns = computed(() => [
   {
-    id: 'TODO',
+    id: 'СОЗДАНО',
     title: 'К исполнению',
-    items: tasks.value.filter((t) => t.status === 'TODO' || !t.status),
+    items: tasks.value.filter((t) => t.status === 'СОЗДАНО' || !t.status),
   },
   {
-    id: 'IN_PROGRESS',
+    id: 'ИССЛЕДОВАНИЕ',
     title: 'В работе',
-    items: tasks.value.filter((t) => t.status === 'IN_PROGRESS'),
+    items: tasks.value.filter((t) => t.status === 'IN_PROGRESS' || t.status === 'ИССЛЕДОВАНИЕ'),
   },
   {
-    id: 'DONE',
+    id: 'К ВЫПОЛНЕНИЮ',
     title: 'Завершено',
-    items: tasks.value.filter((t) => t.status === 'DONE'),
+    items: tasks.value.filter((t) => t.status === 'К ВЫПОЛНЕНИЮ' || t.status === 'TODO'),
   },
 ])
 

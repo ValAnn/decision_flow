@@ -10,9 +10,13 @@
       </button>
 
       <div class="flex gap-3">
-        <VButton variant="secondary" size="md" @click="isEditing = true">
-          <Edit3 class="w-4 h-4 mr-2" /> Редактировать
-        </VButton>
+        <button
+          @click="navigateToEdit"
+          class="flex items-center gap-2 px-4 py-2 bg-brand-light hover:bg-brand-green hover:text-white border border-brand-border rounded-xl text-brand-dark text-sm font-bold transition-all shadow-sm group"
+        >
+          <Pencil class="w-4 h-4 group-hover:rotate-12 transition-transform" />
+          <span>Редактировать задачу</span>
+        </button>
         <VButton
           variant="primary"
           size="md"
@@ -21,6 +25,10 @@
         >
           <CheckCircle class="w-4 h-4 mr-2" /> Завершить задачу
         </VButton>
+        <button @click="syncTask" :disabled="loading" class="sync-button">
+          <span v-if="loading">Обновление...</span>
+          <span v-else>Обновить из Jira</span>
+        </button>
       </div>
     </div>
 
@@ -81,7 +89,7 @@
               >
               <div class="text-sm font-bold text-brand-dark flex items-center gap-2">
                 <Calendar class="w-4 h-4 text-brand-gray" />
-                {{ formatDate(task.completedAt) }}
+                {{ formatDate(task.deadlineAt) }}
               </div>
             </div>
             <div>
@@ -101,10 +109,7 @@
 
           <div class="space-y-4">
             <div class="flex items-center gap-3">
-              <img
-                :src="`https://i.pravatar.cc/150?u=${task.assignee?.id}`"
-                class="w-10 h-10 rounded-full border"
-              />
+              <img :src="DEFAULT_AVATAR" class="w-10 h-10 rounded-full" />
               <div>
                 <p class="text-[10px] font-black text-brand-gray uppercase">Исполнитель</p>
                 <p class="text-sm font-bold text-brand-dark">
@@ -114,14 +119,11 @@
             </div>
 
             <div class="flex items-center gap-3">
-              <img
-                :src="`https://i.pravatar.cc/150?u=${task.lead?.id}`"
-                class="w-10 h-10 rounded-full border"
-              />
+              <img :src="DEFAULT_AVATAR" class="w-10 h-10 rounded-full" />
               <div>
-                <p class="text-[10px] font-black text-brand-gray uppercase">Тимлид / Lead</p>
+                <p class="text-[10px] font-black text-brand-gray uppercase">Аналитик / Lead</p>
                 <p class="text-sm font-bold text-brand-dark">
-                  {{ task.lead?.fullName || 'Не назначен' }}
+                  {{ task.analyst?.fullName || 'Не назначен' }}
                 </p>
               </div>
             </div>
@@ -130,10 +132,36 @@
 
         <div class="bg-brand-dark p-6 rounded-brand text-white shadow-xl shadow-brand-dark/20">
           <div class="flex items-center gap-3 mb-2 opacity-60">
-            <ShieldCheck class="w-4 h-4" />
-            <span class="text-[10px] font-black uppercase tracking-widest">Требуемый стек</span>
+            <!-- <ShieldCheck class="w-4 h-4" /> -->
+            <span class="text-[10px] font-black uppercase tracking-widest">Направление</span>
           </div>
           <p class="text-xl font-bold">{{ task.requiredSpecialization }}</p>
+          <p v-if="!task.skills || task.skills.length === 0" class="text-sm text-gray-400 italic">
+            Навыки не указаны
+          </p>
+
+          <div class="mb-4">
+            <div class="flex items-center gap-3 mb-2 opacity-60">
+              <span class="text-[10px] font-black uppercase tracking-widest">Навыки</span>
+            </div>
+
+            <div class="flex flex-wrap gap-2">
+              <span
+                v-for="skill in task.skills"
+                :key="skill.id"
+                class="px-2 py-1 bg-blue-100 text-blue-700 text-[11px] font-bold rounded uppercase tracking-wider border border-blue-200"
+              >
+                {{ skill.name }}
+              </span>
+
+              <p
+                v-if="!task.skills || task.skills.length === 0"
+                class="text-sm text-gray-400 italic"
+              >
+                Навыки не указаны
+              </p>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -159,6 +187,7 @@ import {
 } from 'lucide-vue-next'
 import apiClient from '../api/client'
 import VButton from '../components/base/VButton.vue'
+import { DEFAULT_AVATAR } from '@/stores/constants'
 
 const route = useRoute()
 const router = useRouter()
@@ -208,5 +237,37 @@ const updateStatus = async (newStatus) => {
   } catch (err) {
     alert('Не удалось обновить статус')
   }
+}
+
+// const props = defineProps(['issueKey'])
+const loading = ref(false)
+
+const syncTask = async () => {
+  loading.value = true
+  try {
+    // Вызываем наш эндпоинт
+    const response = await apiClient.post(`/tasks/import/${task.value.id}`)
+    alert(`Задача ${task.value.id} успешно синхронизирована!`)
+
+    // Можно вызвать событие, чтобы родительский компонент обновил список задач
+    //emit('updated', response.data)
+    await fetchTaskDetails()
+  } catch (error) {
+    console.error('Ошибка синхронизации:', error)
+    alert('Не удалось обновить задачу. Проверьте соединение с Jira.')
+  } finally {
+    loading.value = false
+  }
+}
+
+const taskId = route.params.id
+
+// Метод перехода на страницу редактирования
+const navigateToEdit = () => {
+  if (!taskId) return alert('ID задачи не найден')
+
+  // Перенаправляем на универсальную форму, которую мы сделали на прошлом шаге.
+  // Убедись, что в твоем router/index.js путь к редактированию настроен именно так: '/tasks/edit/:id'
+  router.push(`/tasks/edit/${taskId}`)
 }
 </script>

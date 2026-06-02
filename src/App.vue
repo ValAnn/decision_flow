@@ -1,5 +1,7 @@
 <template>
-  <div class="flex min-h-screen bg-brand-light w-screen">
+  <router-view v-if="isAuthPage" />
+
+  <div v-else class="flex min-h-screen bg-brand-light w-screen">
     <AppSidebar />
 
     <div class="flex-1 ml-64 flex flex-col min-w-0 w-full">
@@ -19,8 +21,13 @@
 </template>
 
 <script setup>
+import { computed } from 'vue'
+import { useRoute } from 'vue-router'
 import AppSidebar from './components/layout/AppSidebar.vue'
 import AppHeader from './components/layout/AppHeader.vue'
+
+const route = useRoute()
+const isAuthPage = computed(() => route.meta.guest)
 </script>
 
 <style>

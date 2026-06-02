@@ -20,8 +20,8 @@ const handleLogin = async () => {
 </script>
 
 <template>
-  <div class="flex items-center justify-center min-h-screen bg-gray-100">
-    <form @submit.prevent="handleLogin" class="p-8 bg-white rounded shadow-md w-96">
+  <div class="flex items-center justify-center min-h-screen bg-gray-100 px-4">
+    <form @submit.prevent="handleLogin" class="p-8 bg-white rounded shadow-md w-full max-w-md">
       <h2 class="text-2xl font-bold mb-6 text-center">Вход в систему</h2>
 
       <input

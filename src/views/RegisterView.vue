@@ -25,8 +25,8 @@ const handleRegister = async () => {
 </script>
 
 <template>
-  <div class="flex items-center justify-center min-h-screen bg-gray-100">
-    <form @submit.prevent="handleRegister" class="p-8 bg-white rounded shadow-md w-96">
+  <div class="flex items-center justify-center min-h-screen bg-gray-100 px-4">
+    <form @submit.prevent="handleRegister" class="p-8 bg-white rounded shadow-md w-full max-w-md">
       <h2 class="text-2xl font-bold mb-6 text-center text-gray-800">Регистрация</h2>
 
       <input
