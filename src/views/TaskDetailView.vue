@@ -121,7 +121,7 @@
             <div class="flex items-center gap-3">
               <img :src="DEFAULT_AVATAR" class="w-10 h-10 rounded-full" />
               <div>
-                <p class="text-[10px] font-black text-brand-gray uppercase">Аналитик / Lead</p>
+                <p class="text-[10px] font-black text-brand-gray uppercase">Аналитик</p>
                 <p class="text-sm font-bold text-brand-dark">
                   {{ task.analyst?.fullName || 'Не назначен' }}
                 </p>
@@ -178,7 +178,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import {
   ArrowLeft,
-  Edit3,
+  Pencil,
   CheckCircle,
   Clock,
   Calendar,

@@ -80,10 +80,10 @@ const errorMessage = ref('')
 const period = ref('week')
 
 const overview = ref({
-  totalTasks: 48,
-  inProgress: 16,
-  completed: 27,
-  overdue: 5,
+  totalTasks: 8,
+  inProgress: 1,
+  completed: 2,
+  overdue: 0,
 })
 
 const workloadDataByPeriod = {
@@ -112,7 +112,7 @@ const loadDashboard = async () => {
   overview.value =
     period.value === 'month'
       ? { totalTasks: 186, inProgress: 41, completed: 121, overdue: 24 }
-      : { totalTasks: 48, inProgress: 16, completed: 27, overdue: 5 }
+      : { totalTasks: 8, inProgress: 1, completed: 2, overdue: 0 }
 
   workloadData.value = workloadDataByPeriod[period.value] || workloadDataByPeriod.week
 }

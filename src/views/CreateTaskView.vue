@@ -32,8 +32,9 @@
             <div>
               <label
                 class="block text-[11px] font-bold text-brand-gray uppercase tracking-wider mb-2"
-                >Название задачи</label
               >
+                Название задачи
+              </label>
               <input
                 v-model="taskForm.title"
                 type="text"
@@ -47,8 +48,9 @@
               <div>
                 <label
                   class="block text-[11px] font-bold text-brand-gray uppercase tracking-wider mb-2"
-                  >Департамент</label
                 >
+                  Департамент
+                </label>
                 <div class="relative">
                   <select
                     v-model.number="taskForm.departmentId"
@@ -81,8 +83,9 @@
               <div>
                 <label
                   class="block text-[11px] font-bold text-brand-gray uppercase tracking-wider mb-2"
-                  >Приоритет</label
                 >
+                  Приоритет
+                </label>
                 <div class="grid grid-cols-3 gap-2 p-1 bg-brand-light rounded-brand">
                   <button
                     v-for="p in priorities"
@@ -105,8 +108,9 @@
             <div>
               <label
                 class="block text-[11px] font-bold text-brand-gray uppercase tracking-wider mb-2"
-                >Описание</label
               >
+                Описание
+              </label>
               <textarea
                 v-model="taskForm.description"
                 rows="6"
@@ -167,8 +171,9 @@
               <div>
                 <label
                   class="block text-[11px] font-bold text-brand-gray uppercase tracking-wider mb-2"
-                  >Срок выполнения</label
                 >
+                  Срок выполнения
+                </label>
                 <input
                   v-model="taskForm.deadlineAt"
                   type="date"
@@ -179,8 +184,9 @@
               <div>
                 <label
                   class="block text-[11px] font-bold text-brand-gray uppercase tracking-wider mb-2"
-                  >Специализация</label
                 >
+                  Специализация
+                </label>
                 <select
                   v-model="taskForm.requiredSpecialization"
                   class="w-full px-4 py-3 bg-brand-light border border-transparent rounded-brand outline-none focus:bg-white focus:border-brand-green transition-all appearance-none cursor-pointer"
@@ -220,40 +226,42 @@
             <div class="animate-spin rounded-full h-5 w-5 border-b-2 border-brand-green"></div>
           </div>
 
-          <div v-else class="space-y-3 max-h-[400px] overflow-y-auto pr-1 custom-scrollbar">
-            <div
-              v-for="expert in filteredExperts"
-              :key="expert.id"
-              @click="taskForm.developer.id = expert.id"
-              :class="[
-                'p-4 rounded-xl border transition-all cursor-pointer group',
-                taskForm.developer.id === expert.id
-                  ? 'border-brand-green bg-brand-green/5 shadow-sm'
-                  : 'border-transparent bg-brand-light hover:bg-white hover:border-brand-border',
-              ]"
-            >
-              <div class="flex items-center gap-3">
-                <img
-                  :src="expert.avatar"
-                  class="w-10 h-10 rounded-full object-cover border border-white"
-                />
-                <div class="flex-1 min-w-0">
-                  <div class="flex justify-between items-start">
-                    <p class="text-sm font-bold text-brand-dark truncate">{{ expert.name }}</p>
-                    <span
-                      class="text-[9px] font-extrabold text-brand-green bg-white px-1.5 py-0.5 rounded border border-brand-green/20"
-                    >
-                      {{ expert.match }}%
-                    </span>
+          <div v-else class="max-h-[400px] overflow-y-auto pr-1 custom-scrollbar relative">
+            <TransitionGroup name="list" tag="div" class="space-y-3">
+              <div
+                v-for="expert in filteredExperts"
+                :key="expert.id"
+                @click="taskForm.developer.id = expert.id"
+                :class="[
+                  'p-4 rounded-xl border transition-all duration-300 cursor-pointer group',
+                  taskForm.developer && taskForm.developer.id === expert.id
+                    ? 'border-brand-green bg-brand-green/5 shadow-sm'
+                    : 'border-transparent bg-brand-light hover:bg-white hover:border-brand-border',
+                ]"
+              >
+                <div class="flex items-center gap-3">
+                  <img
+                    :src="expert.avatar"
+                    class="w-10 h-10 rounded-full object-cover border border-white"
+                  />
+                  <div class="flex-1 min-w-0">
+                    <div class="flex justify-between items-start">
+                      <p class="text-sm font-bold text-brand-dark truncate">{{ expert.name }}</p>
+                      <span
+                        class="text-[9px] font-extrabold text-brand-green bg-white px-1.5 py-0.5 rounded border border-brand-green/20"
+                      >
+                        {{ expert.match }}%
+                      </span>
+                    </div>
+                    <p class="text-[10px] text-brand-gray font-medium">{{ expert.roleName }}</p>
                   </div>
-                  <p class="text-[10px] text-brand-gray font-medium">{{ expert.roleName }}</p>
+                  <Check
+                    v-if="taskForm.developer && taskForm.developer.id === expert.id"
+                    class="w-4 h-4 text-brand-green"
+                  />
                 </div>
-                <Check
-                  v-if="taskForm.developer.id === expert.id"
-                  class="w-4 h-4 text-brand-green"
-                />
               </div>
-            </div>
+            </TransitionGroup>
           </div>
         </div>
 
@@ -285,15 +293,14 @@ const router = useRouter()
 const route = useRoute()
 const currentUser = authService.getUser()
 
-// Системные состояния
 const isSubmitting = ref(false)
 const isLoadingExperts = ref(false)
 const isLoadingDeps = ref(false)
 const searchMember = ref('')
+const newTagInput = ref('')
 const suggestedExperts = ref([])
 const departments = ref([])
 
-// Флаг режима редактирования
 const isEditMode = computed(() => !!route.params.id)
 
 const priorities = [
@@ -302,22 +309,22 @@ const priorities = [
   { label: 'Высокий', value: 'HIGH' },
 ]
 
+// Начальное состояние формы
 const taskForm = reactive({
   title: '',
   description: '',
   status: 'TODO',
   priority: 'MEDIUM',
   requiredSpecialization: 'Frontend',
-  departmentId: null,
-  deadlineAt: null,
-  creator: { id: 1 },
-  assignee: { id: currentUser?.id || 1 },
+  departmentId: 0,
+  deadlineAt: '',
+  creator: null,
+  assignee: null,
   developer: { id: null },
   spentHours: 0,
   skills: [],
 })
 
-// Подгрузка задачи, если мы в режиме редактирования
 const fetchTaskForEdit = async () => {
   if (!isEditMode.value) return
 
@@ -325,41 +332,48 @@ const fetchTaskForEdit = async () => {
     const response = await apiClient.get(`/tasks/${route.params.id}`)
     const task = response.data
 
-    // Заполняем форму реактивными данными из бэкенда
-    taskForm.title = task.title
-    taskForm.description = task.description
-    taskForm.status = task.status
-    taskForm.priority = task.priority
-    taskForm.requiredSpecialization = task.requiredSpecialization || 'Frontend'
-    taskForm.departmentId = task.department?.id || task.departmentId
-    taskForm.developer.id = task.developer?.id
-    taskForm.skills = task.skills ? [...task.skills] : []
+    // ИСПРАВЛЕНИЕ: Обновляем реактивный объект через Object.assign, сохраняя внутреннюю структуру Vue
+    Object.assign(taskForm, {
+      title: task.title || '',
+      description: task.description || '',
+      status: task.status || 'TODO',
+      priority: task.priority || 'MEDIUM',
+      requiredSpecialization: task.requiredSpecialization || 'Frontend',
+      departmentId: task.department ? task.department.id : null,
+      spentHours: task.spentHours || 0,
+      creator: task.creator || null,
+      assignee: task.assignee || null,
+      developer: { id: task.developer?.id || task.assignee?.id || null },
+      skills: task.skills ? [...task.skills] : [],
+    })
 
-    // Форматируем дату для input type="date" (yyyy-MM-dd)
+    // ИСПРАВЛЕНИЕ ДАТЫ: Строго вырезаем YYYY-MM-DD для корректного отображения в <input type="date">
     if (task.deadlineAt) {
       taskForm.deadlineAt = task.deadlineAt.split('T')[0]
+    } else {
+      taskForm.deadlineAt = ''
     }
+
+    console.log('Данные задачи успешно записаны в форму:', taskForm)
   } catch (err) {
     console.error('Не удалось загрузить задачу для редактирования', err)
     alert('Ошибка при загрузке данных задачи')
   }
 }
 
-// Загрузка команды
 const fetchExperts = async () => {
   isLoadingExperts.value = true
   try {
     const response = await apiClient.get('/developers/profile')
     suggestedExperts.value = response.data.map((user) => ({
       id: user.id,
-      name: user.name,
+      name: user.name || user.fullName || 'Без имени',
       roleName: user.role?.name || 'Developer',
-      match: 0, // Изначально 0, далее будем заменять на расчет бэкенда
+      match: 0,
       avatar: `https://i.pravatar.cc/150?u=${user.id}`,
     }))
 
-    // Как только загрузили экспертов, считаем для них стартовый скор совместимости
-    calculateScores()
+    await calculateScores()
   } catch (err) {
     console.error('Не удалось загрузить команду', err)
   } finally {
@@ -372,6 +386,8 @@ const fetchDepartments = async () => {
   try {
     const response = await apiClient.get('/departments')
     departments.value = response.data
+
+    // Если мы создаем новую задачу, ставим дефолтный отдел
     if (!isEditMode.value && departments.value.length > 0) {
       taskForm.departmentId = departments.value[0].id
     }
@@ -382,36 +398,62 @@ const fetchDepartments = async () => {
   }
 }
 
-// Функция-заглушка для интеграции со скорингом СППР (Шаг 2)
-const calculateScores = () => {
-  console.log('Вызываем расчет совместимости для параметров:', taskForm)
-  // На следующем шаге мы сделаем сюда реальный POST запрос на бэкенд
-  suggestedExperts.value.forEach((expert) => {
-    if (!expert.match || expert.match === 0) {
-      expert.match = Math.floor(Math.random() * 20) + 75 // Временный фолбэк
-    }
-  })
+const calculateScores = async () => {
+  if (isEditMode.value) {
+    const taskId = route.params.id
+    const promises = suggestedExperts.value.map(async (expert) => {
+      try {
+        const response = await apiClient.get('/matching/predict', {
+          params: { taskId: taskId, devId: expert.id },
+        })
+        expert.match = Math.round(response.data.matchPercent || 0)
+      } catch (err) {
+        console.error(`Ошибка расчета матча для devId ${expert.id}:`, err)
+        expert.match = 0
+      }
+    })
+    await Promise.all(promises)
+  } else {
+    suggestedExperts.value.forEach((expert) => {
+      if (!expert.match || expert.match === 0) {
+        expert.match = Math.floor(Math.random() * 45) + 50
+      }
+    })
+  }
 }
 
-// Следим за изменениями параметров формы, чтобы пересчитывать проценты на лету!
+// 1. Следим за строковыми и перечисляемыми полями
 watch(
-  () => [taskForm.requiredSpecialization, taskForm.priority, taskForm.description],
+  () => [taskForm.title, taskForm.description, taskForm.priority, taskForm.requiredSpecialization],
   () => {
+    console.log('Изменились текстовые параметры задачи, пересчитываем скоринг...')
     calculateScores()
   },
 )
 
+// 2. ОТДЕЛЬНЫЙ глубокий watch для массива тегов (skills)
+watch(
+  () => taskForm.skills,
+  () => {
+    console.log('Изменился список тегов задачи (добавлен/удален тег), пересчитываем скоринг...')
+    calculateScores()
+  },
+  { deep: true }, // Этот флаг заставит Vue реагировать на splice, push и любые изменения внутри массива
+)
+
 const filteredExperts = computed(() => {
-  if (!searchMember.value) return suggestedExperts.value
-  return suggestedExperts.value.filter((e) =>
-    e.name.toLowerCase().includes(searchMember.value.toLowerCase()),
-  )
+  let list = [...suggestedExperts.value]
+  if (searchMember.value) {
+    list = list.filter((e) => e.name.toLowerCase().includes(searchMember.value.toLowerCase()))
+  }
+  return list.sort((a, b) => b.match - a.match)
 })
 
+// Жёсткая последовательность загрузки данных
 onMounted(async () => {
-  await fetchDepartments()
-  await fetchTaskForEdit()
-  await fetchExperts()
+  await fetchDepartments() // 1. Получаем департаменты (чтобы <option> в селекте уже существовали)
+  await fetchTaskForEdit() // 2. Подгружаем задачу (теперь селект сразу найдёт нужный id)
+  await fetchExperts() // 3. Загружаем команду
 })
 
 const handleSubmit = async () => {
@@ -430,10 +472,8 @@ const handleSubmit = async () => {
     }
 
     if (isEditMode.value) {
-      // Если редактирование — шлем PUT / PATCH запрос
       await apiClient.put(`/tasks/${route.params.id}`, payload)
     } else {
-      // Если создание — шлем стандартный POST запрос
       payload.createdAt = new Date().toISOString()
       await apiClient.post('/tasks', payload)
     }
@@ -447,21 +487,24 @@ const handleSubmit = async () => {
   }
 }
 
-// 3. Метод добавления тега в список
 const addTag = () => {
   const tag = newTagInput.value.trim()
   if (!tag) return
 
-  // Проверяем, чтобы тег не дублировался
-  if (!taskForm.skills.includes(tag)) {
-    taskForm.skills.push(tag)
+  if (!taskForm.skills.some((s) => s.name === tag)) {
+    taskForm.skills.push({ name: tag })
   }
 
-  newTagInput.value = '' // Очищаем поле ввода
+  newTagInput.value = ''
 }
 
-// 4. Метод удаления тега по его индексу
 const removeTag = (index) => {
-  taskForm.tags.splice(index, 1)
+  taskForm.skills.splice(index, 1)
 }
 </script>
+
+<style scoped>
+.list-move {
+  transition: transform 0.5s ease;
+}
+</style>

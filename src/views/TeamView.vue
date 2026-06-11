@@ -10,10 +10,6 @@
       <VButton variant="secondary" class="mt-4" @click="fetchTeam">Попробовать снова</VButton>
     </div>
 
-    <!-- <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      <div v-for="member in paginatedTeam" :key="member.id" ...></div>
-    </div> -->
-
     <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
       <div>
         <h1 class="text-3xl font-bold text-brand-dark">Наша команда</h1>
@@ -22,15 +18,21 @@
         </p>
       </div>
 
-      <div class="flex gap-4">
+      <div class="flex flex-wrap items-center gap-4">
         <div class="bg-white px-4 py-2 rounded-xl border border-brand-border shadow-sm">
           <p class="text-[10px] font-bold text-brand-gray uppercase">Всего в поиске</p>
           <p class="text-xl font-bold text-brand-dark">{{ filteredTeamAll.length }}</p>
         </div>
-        <div class="bg-white px-4 py-2 rounded-xl border border-brand-border shadow-sm">
-          <p class="text-[10px] font-bold text-brand-gray uppercase">Ср. загрузка</p>
-          <p class="text-xl font-bold text-brand-green">74%</p>
-        </div>
+
+        <VButton
+          variant="primary"
+          size="md"
+          @click="$router.push('/developers/create')"
+          class="flex items-center gap-2 shadow-lg shadow-brand-green/20"
+        >
+          <UserPlus class="w-4 h-4" />
+          <span>Добавить разработчика</span>
+        </VButton>
       </div>
     </div>
 
@@ -102,12 +104,17 @@
             class="flex justify-between items-center text-[10px] font-bold uppercase tracking-wider"
           >
             <span class="text-brand-gray">Текущая загрузка</span>
-            <span :class="getLoadColor(member.workload)">{{ member.currentWorkload }}%</span>
+            <span :class="getLoadColor(member.currentWorkload)"
+              >{{ member.currentWorkload }} задач</span
+            >
           </div>
           <div class="h-1.5 w-full bg-brand-light rounded-full overflow-hidden">
             <div
-              :class="['h-full transition-all duration-500', getLoadBg(member.workload)]"
-              :style="{ width: member.workload + '%' }"
+              :class="[
+                'h-full transition-all duration-500',
+                getLoadBg(member.currentWorkload * 25),
+              ]"
+              :style="{ width: Math.min(member.currentWorkload * 25, 100) + '%' }"
             ></div>
           </div>
         </div>
@@ -124,12 +131,15 @@
             >
               {{ proj }}
             </span>
+            <p v-if="!member.topDepartments?.length" class="text-[10px] text-brand-gray italic">
+              Нет активных задач
+            </p>
           </div>
         </div>
 
         <div class="mt-6 pt-6 border-t border-brand-light flex gap-3">
-          <router-link :to="'/team/' + member.id">
-            <VButton variant="secondary" size="md" class="flex-1 text-xs">Профиль</VButton>
+          <router-link :to="'/developers/' + member.id + '/profile'" class="flex-1">
+            <VButton variant="secondary" size="md" class="w-full text-xs">Профиль</VButton>
           </router-link>
           <VButton variant="primary" size="md" class="flex-1 text-xs">Написать</VButton>
         </div>
@@ -183,6 +193,7 @@
                 ? 'bg-brand-green text-white shadow-lg shadow-brand-green/20'
                 : 'bg-white text-brand-gray border border-brand-border hover:border-brand-green',
             ]"
+            ;
           >
             {{ page }}
           </button>
@@ -201,16 +212,16 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'
-import apiClient from '../api/client' // Импортируем наш клиент
-import { Search, Building2, ChevronLeft, ChevronRight, Loader2 } from 'lucide-vue-next'
+import { ref, computed, onMounted } from 'vue'
+import apiClient from '../api/client'
+// Добавили иконку UserPlus для новой кнопки
+import { Search, ChevronLeft, ChevronRight, Loader2, MoreVertical, UserPlus } from 'lucide-vue-next'
 import VButton from '../components/base/VButton.vue'
 
 const team = ref([])
 const isLoading = ref(true)
 const error = ref(null)
 
-// Состояние фильтров и пагинации
 const searchQuery = ref('')
 const filterDept = ref('')
 const currentPage = ref(1)
@@ -218,7 +229,6 @@ const itemsPerPage = 6
 
 const DEFAULT_AVATAR = 'https://www.gravatar.com/avatar/00000000000000000000000000000000?d=mp&f=y'
 
-// Функция загрузки данных с бэкенда
 const fetchTeam = async () => {
   isLoading.value = true
   error.value = null
@@ -233,18 +243,20 @@ const fetchTeam = async () => {
   }
 }
 
-// Вызываем загрузку при старте
 onMounted(fetchTeam)
 
+// Фильтрация с учетом полей DeveloperProfileDTO бэкенда (member.name вместо member.full_name)
 const filteredTeamAll = computed(() => {
   if (!team.value) return []
 
   return team.value.filter((member) => {
-    const full_name = member.full_name || ''
+    const fullName = member.name || ''
+    const matchesSearch = fullName.toLowerCase().includes(searchQuery.value.toLowerCase())
 
-    const matchesSearch = full_name.toLowerCase().includes(searchQuery.value.toLowerCase())
-
-    const matchesDept = !filterDept.value || member.dept === filterDept.value
+    // Поиск по департаментам
+    const matchesDept =
+      !filterDept.value ||
+      (member.topDepartments && member.topDepartments.includes(filterDept.value))
 
     return matchesSearch && matchesDept
   })
@@ -257,11 +269,25 @@ const paginatedTeam = computed(() => {
 
 const totalPages = computed(() => Math.ceil(filteredTeamAll.value.length / itemsPerPage))
 
-// Вспомогательные функции для динамических стилей загрузки
+// Вспомогательные методы переключения пагинации
+const nextPage = () => {
+  if (currentPage.value < totalPages.value) currentPage.value++
+}
+const prevPage = () => {
+  if (currentPage.value > 1) currentPage.value--
+}
+
+// Сброс фильтров
+const resetFilters = () => {
+  searchQuery.value = ''
+  filterDept.value = ''
+  currentPage.value = 1
+}
+
 const getLoadColor = (v) => {
-  const value = Number(v) || 0 // На случай, если из API пришла строка или null
-  if (value > 90) return 'text-red-600'
-  if (value > 70) return 'text-amber-600'
+  const value = Number(v) || 0
+  if (value >= 4) return 'text-red-600'
+  if (value >= 2) return 'text-amber-600'
   return 'text-brand-green'
 }
 

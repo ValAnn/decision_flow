@@ -12,7 +12,12 @@ import { useAuthStore } from '@/stores/auth'
 const routes = [
   { path: '/', redirect: '/login' },
   { path: '/dashboard', name: 'dashboard', component: DashboardView, meta: { requiresAuth: true } },
-  { path: '/tasks/create', name: 'tasks/create', component: CreateTaskView, meta: { requiresAuth: true } },
+  {
+    path: '/tasks/create',
+    name: 'tasks/create',
+    component: CreateTaskView,
+    meta: { requiresAuth: true },
+  },
   { path: '/tasks', name: 'tasks', component: TasksView, meta: { requiresAuth: true } },
   {
     path: '/team',
@@ -20,7 +25,12 @@ const routes = [
     component: () => import('../views/TeamView.vue'),
     meta: { requiresAuth: true },
   },
-  { path: '/team/:id', name: 'user-detail', component: UserDetailView, meta: { requiresAuth: true } },
+  // {
+  //   path: '/team/:id',
+  //   name: 'user-detail',
+  //   component: UserDetailView,
+  //   meta: { requiresAuth: true },
+  // },
   {
     path: '/tasks/:id',
     name: 'task-detail',
@@ -40,7 +50,25 @@ const routes = [
     component: CreateTaskView, // Тот же самый файл формы!
     meta: { requiresAuth: true },
   },
+  {
+    path: '/developers/:id/profile',
+    name: 'developer-profile',
+    component: () => import('../views/CreateDeveloperView.vue'), // Проверь правильность пути к файлу!
+  },
 
+  // СТРАНИЦА СОЗДАНИЯ
+  {
+    path: '/developers/create',
+    name: 'create-developer',
+    component: () => import('../views/CreateDeveloperView.vue'),
+  },
+
+  // СТРАНИЦА РЕДАКТИРОВАНИЯ (Сюда ведет кнопка "Редактировать" из профиля)
+  {
+    path: '/developers/:id/edit',
+    name: 'edit-developer',
+    component: () => import('../views/CreateDeveloperView.vue'),
+  },
   { path: '/login', component: LoginView, meta: { guest: true } },
   { path: '/register', component: RegisterView, meta: { guest: true } },
 ]
